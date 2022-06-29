@@ -17,13 +17,17 @@ io.on('connection', (client) => {
             });
         }
 
+        //Lo unimos a una sala
         client.join(data.sala);
 
         //Agregamos el cliente al arreglo
         usuarios.agregarPersona(client.id,data.nombre,data.sala);
 
-        //Listamos todas las personas conectadas
-        client.broadcast.to(data.sala).emit('listar-personas',usuarios.getPersonasPorSala(data.sala));
+        //Listamos todas las personas conectadas y con el to le indicamos que notifique solo a una sala
+        client.broadcast.to(data.sala).emit('lista-persona',usuarios.getPersonasPorSala(data.sala));
+        client.broadcast.to(data.sala).emit('crear-mensaje',
+        crearMensaje('Admin',`${data.nombre} se unió`)   
+        );
         
         //Le enviamos al cliente el arreglo de las personas conectadas
         callback(usuarios.getPersonasPorSala(data.sala));
@@ -31,12 +35,13 @@ io.on('connection', (client) => {
         
     });
 
-    client.on('crear-mensaje',(data) => {
+    client.on('crear-mensaje',(data, callback) => {
 
         let persona = usuarios.getPersona(client.id);
 
         client.broadcast.to(persona.sala).emit('crear-mensaje', crearMensaje(persona.nombre,data.mensaje));
 
+        callback(crearMensaje(persona.nombre,data.mensaje));
 
     });
     
@@ -51,7 +56,7 @@ io.on('connection', (client) => {
         );
 
         //Volvemos a listar a todas las personas para que escuchen todos los clientes
-        client.broadcast.to(usuarioBorrado.sala).emit('listar-personas',usuarios.getPersonasPorSala(usuarioBorrado.sala));
+        client.broadcast.to(usuarioBorrado.sala).emit('lista-persona',usuarios.getPersonasPorSala(usuarioBorrado.sala));
     });
     
 

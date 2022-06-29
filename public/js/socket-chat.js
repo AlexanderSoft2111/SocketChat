@@ -1,27 +1,26 @@
-const socket = io();
+var socket = io();
 
-let params = new URLSearchParams(window.location.search);
+var params = new URLSearchParams(window.location.search);
 
-if(!params.has('nombre') || !params.has('sala')){
+if (!params.has('nombre') || !params.has('sala')) {
     window.location = 'index.html';
-    throw new Error('el nombre es necesario');
+    throw new Error('El nombre y sala son necesarios');
 }
 
-const usuario = {
+var usuario = {
     nombre: params.get('nombre'),
     sala: params.get('sala')
-
 };
 
 
 
 socket.on('connect', function() {
     console.log('Conectado al servidor');
-    
-    //Emitimos el evento para obtener la personas conectadas
-    socket.emit('entrar-chat',usuario,(personas) => {
-        console.log(personas)
+
+    socket.emit('entrar-chat', usuario, function(resp) {
+        renderizarUsuarios(resp);
     });
+
 });
 
 // escuchar
@@ -32,30 +31,24 @@ socket.on('disconnect', function() {
 });
 
 
-// Enviar información
-/* socket.emit('enviarMensaje', {
-    usuario: 'Fernando',
-    mensaje: 'Hola Mundo'
-}, function(resp) {
-    console.log('respuesta server: ', resp);
-}); */
 
 
-
-// Escuchar información cuando un usuario se desconecta
-socket.on('crear-mensaje', (mensaje) => {
-
+// Escuchar información
+socket.on('crear-mensaje', function(mensaje) {
     console.log('Servidor:', mensaje);
-
+    renderizarMensajes(mensaje, false);
+    scrollBottom();
 });
 
-// Escuchar información de las personas conectadas
-socket.on('listar-personas', (usuarios) => {
-
-    console.log(usuarios);
-
+// Escuchar cambios de usuarios
+// cuando un usuario entra o sale del chat
+socket.on('lista-persona', function(personas) {
+    renderizarUsuarios(personas);
 });
 
-socket.on('mensaje-privado',(mensaje) => {
-    console.log(mensaje)
+// Mensajes privados
+socket.on('mensaje-privado', function(mensaje) {
+
+    console.log('Mensaje Privado:', mensaje);
+
 });
